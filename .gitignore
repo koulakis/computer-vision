@@ -1,3 +1,4 @@
 F_MNIST_data
 some_fmnist
 .ipynb_checkpoints
+__pycache__
