@@ -65,11 +65,11 @@ def train_model(model, criterion, optimizer, train_loader, test_loader, epochs=3
         for images, labels in iter(train_loader):
             optimizer.zero_grad()
 
-            output = model.forward(images)
+            output = model(images)
             loss = criterion(output, labels)
             loss.backward()
             optimizer.step()
-
+            
             metrics.append({
                 "training_loss": loss.item(),
                 "training_accuracy": eval_accuracy(labels, output),
