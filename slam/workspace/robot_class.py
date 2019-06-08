@@ -81,17 +81,12 @@ class robot:
             for x, y in self.landmarks
         ]
         
-        landmarks_in_range = [
-            [x, y]
-            for x, y in landmark_noisy_pos
-            if x >= 0.0 and x <= self.world_size
-            if y >= 0.0 and y <= self.world_size
-            if np.linalg.norm([self.x - x, self.y - y]) <= self.measurement_range
-        ]
-        
         measurements = [
             [idx, x - self.x, y - self.y]
-            for idx, [x, y] in enumerate(landmarks_in_range)
+            for idx, [x, y] in enumerate(landmark_noisy_pos)
+            if x >= 0.0 and x <= self.world_size
+            if y >= 0.0 and y <= self.world_size
+            if np.linalg.norm([self.x - x, self.y - y]) <= self.measurement_range or self.measurement_range == -1
         ]
         ## TODO: iterate through all of the landmarks in a world
         
