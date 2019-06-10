@@ -22,10 +22,19 @@ class EncoderCNN(nn.Module):
     
 
 class DecoderRNN(nn.Module):
-    def __init__(self, embed_size, hidden_size, vocab_size, num_layers=1):
+    def __init__(
+        self, 
+        embed_size, 
+        hidden_size, 
+        vocab_size, 
+        num_layers=1, 
+        max_caption_length=100,
+        end_word_idx=1):
         super().__init__()
         
         self.hidden_size = hidden_size
+        self.max_caption_length = max_caption_length
+        self.end_word_idx = end_word_idx
         
         self.embedding = nn.Embedding(vocab_size, embed_size)
         
@@ -37,18 +46,20 @@ class DecoderRNN(nn.Module):
         
         self.fc = nn.Linear(hidden_size, vocab_size)
     
+    @staticmethod
+    def random_hidden_state(batch_size, hidden_size):
+        return (
+            torch.randn(1, batch_size, hidden_size), 
+            torch.randn(1, batch_size, hidden_size))
+    
     def forward(self, features, captions):
         embedded_features_and_captions = torch.cat(
             (features.unsqueeze(1),
              self.embedding(captions[:,:-1])),
             dim=1)
-        
-        batch_size = features.shape[0]
-        hidden = (
-            torch.randn(1, batch_size, self.hidden_size), 
-            torch.randn(1, batch_size, self.hidden_size))
-        
-        output, _ = self.lstm(embedded_features_and_captions, hidden)
+
+        output, _ = self.lstm(embedded_features_and_captions, DecoderRNN.random_hidden_state(features.shape[0], self.hidden_size))
+        print(output.shape)
         
         return self.fc(output)
             
@@ -56,4 +67,19 @@ class DecoderRNN(nn.Module):
 
     def sample(self, inputs, states=None, max_len=20):
         " accepts pre-processed image tensor (inputs) and returns predicted sentence (list of tensor ids of length max_len) "
-        pass
+        hidden_state = random_hidden_state(inputs.shape[0], self.hidden_size)
+    
+        caption = []
+        while len(caption) < self.max_caption_length:
+            output, hidden = self.lstm(inputs, hidden)
+            word_vector = self.linear(output).squeeze(1)
+            _, word_idx = torch.max(word_vector, dim=1)
+            
+            caption.append(word_idx.cpu().numpy()[0].item())
+            
+            if (word_idx == self.end_word_idx):
+                break
+            
+            inputs = self.embedding(word_idx).unsqueeze(1)
+            
+        return caption
