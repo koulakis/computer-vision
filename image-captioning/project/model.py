@@ -64,8 +64,8 @@ class DecoderRNN(nn.Module):
     
         caption = []
         while len(caption) < self.max_caption_length:
-            output, hidden = self.lstm(inputs, hidden)
-            word_vector = self.linear(output).squeeze(1)
+            output, hidden_state = self.lstm(inputs, hidden_state)
+            word_vector = self.fc(output).squeeze(1)
             _, word_idx = torch.max(word_vector, dim=1)
             
             caption.append(word_idx.cpu().numpy()[0].item())
