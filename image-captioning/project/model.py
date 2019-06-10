@@ -46,20 +46,13 @@ class DecoderRNN(nn.Module):
         
         self.fc = nn.Linear(hidden_size, vocab_size)
     
-    @staticmethod
-    def random_hidden_state(batch_size, hidden_size):
-        return (
-            torch.randn(1, batch_size, hidden_size), 
-            torch.randn(1, batch_size, hidden_size))
-    
     def forward(self, features, captions):
         embedded_features_and_captions = torch.cat(
             (features.unsqueeze(1),
              self.embedding(captions[:,:-1])),
             dim=1)
 
-        output, _ = self.lstm(embedded_features_and_captions, DecoderRNN.random_hidden_state(features.shape[0], self.hidden_size))
-        print(output.shape)
+        output, _ = self.lstm(embedded_features_and_captions, None)
         
         return self.fc(output)
             
@@ -67,7 +60,7 @@ class DecoderRNN(nn.Module):
 
     def sample(self, inputs, states=None, max_len=20):
         " accepts pre-processed image tensor (inputs) and returns predicted sentence (list of tensor ids of length max_len) "
-        hidden_state = random_hidden_state(inputs.shape[0], self.hidden_size)
+        hidden_state = None
     
         caption = []
         while len(caption) < self.max_caption_length:
